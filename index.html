@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Study Mission — Smart Study Planner</title>
+<meta name="description" content="A cross-device study planner that tracks daily targets, streaks, and progress in real time.">
+<meta name="theme-color" content="#0B1220">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body data-theme="dark">
+
+<!-- ============ AUTH SCREEN ============ -->
+<section id="auth-screen">
+  <div class="glass auth-card">
+    <div class="auth-hero">
+      <div class="brand-mark">SM</div>
+      <h1 id="auth-title">Welcome back</h1>
+      <p id="auth-subtitle">Sign in to sync your mission across every device.</p>
+    </div>
+
+    <div class="auth-error" id="auth-error"></div>
+
+    <!-- Login form -->
+    <form id="login-form">
+      <div class="field">
+        <label for="login-email">Email</label>
+        <input type="email" id="login-email" required autocomplete="email" placeholder="you@example.com">
+      </div>
+      <div class="field">
+        <label for="login-password">Password</label>
+        <input type="password" id="login-password" required autocomplete="current-password" placeholder="••••••••">
+      </div>
+      <div class="auth-links">
+        <label class="checkbox-row"><input type="checkbox" id="remember-me" checked> Remember me</label>
+        <a id="forgot-link">Forgot password?</a>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block mt-2">Sign in</button>
+    </form>
+
+    <!-- Signup form -->
+    <form id="signup-form" class="hidden">
+      <div class="field">
+        <label for="signup-name">Name</label>
+        <input type="text" id="signup-name" required autocomplete="name" placeholder="Your name">
+      </div>
+      <div class="field">
+        <label for="signup-email">Email</label>
+        <input type="email" id="signup-email" required autocomplete="email" placeholder="you@example.com">
+      </div>
+      <div class="field">
+        <label for="signup-password">Password</label>
+        <input type="password" id="signup-password" required minlength="6" autocomplete="new-password" placeholder="At least 6 characters">
+      </div>
+      <button type="submit" class="btn btn-primary btn-block mt-2">Create account</button>
+    </form>
+
+    <!-- Reset form -->
+    <form id="reset-form" class="hidden">
+      <div class="field">
+        <label for="reset-email">Email</label>
+        <input type="email" id="reset-email" required autocomplete="email" placeholder="you@example.com">
+      </div>
+      <button type="submit" class="btn btn-primary btn-block mt-2">Send reset link</button>
+    </form>
+
+    <div class="auth-divider">or</div>
+    <button id="google-signin" class="btn btn-ghost btn-block">
+      <svg width="16" height="16" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.6-6 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.1 8 3.1l5.7-5.7C34.6 6 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.7-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 15.9 18.9 13 24 13c3.1 0 5.9 1.1 8 3.1l5.7-5.7C34.6 6 29.6 4 24 4 16.3 4 9.6 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.5 0 10.4-1.9 14.1-5.1l-6.5-5.5C29.6 35 26.9 36 24 36c-5.3 0-9.7-3.4-11.3-8.1l-6.6 5.1C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.2 4.3-4.1 5.7l6.5 5.5C41.5 35.9 44 30.3 44 24c0-1.3-.1-2.7-.4-3.5z"/></svg>
+      Continue with Google
+    </button>
+
+    <p class="auth-switch" id="auth-switch">
+      New here? <a class="link" id="show-signup">Create an account</a>
+    </p>
+  </div>
+</section>
+
+<!-- ============ APP SHELL ============ -->
+<div id="app">
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark">SM</div>
+      <div>
+        <div class="brand-name">Study Mission</div>
+        <div class="brand-tag" id="today-label">—</div>
+      </div>
+    </div>
+    <div class="topbar-actions">
+      <button class="icon-btn" id="theme-toggle" aria-label="Toggle theme" title="Toggle theme">🌙</button>
+      <button class="icon-btn" id="signout-btn" aria-label="Sign out" title="Sign out">⏻</button>
+    </div>
+  </header>
+
+  <div id="offline-banner" class="banner hidden" style="margin: 12px 20px 0;">⚡ Offline — changes are saved locally and will sync automatically.</div>
+
+  <main class="shell">
+
+    <!-- ---------------- DASHBOARD VIEW ---------------- -->
+    <section id="view-dashboard" class="view">
+      <div class="grid grid-2">
+        <div class="glass card" id="mission-card">
+          <div class="card-title"><span>Today's Mission</span><span class="mono" id="clock">--:--</span></div>
+          <div class="orbit-wrap">
+            <svg class="orbit-svg" viewBox="0 0 220 220">
+              <defs>
+                <linearGradient id="orbitGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#4C5FD5"/>
+                  <stop offset="100%" stop-color="#2DD4BF"/>
+                </linearGradient>
+              </defs>
+              <circle class="orbit-track" cx="110" cy="110" r="96"></circle>
+              <circle class="orbit-progress" id="orbit-progress" cx="110" cy="110" r="96" stroke-dasharray="603" stroke-dashoffset="603"></circle>
+            </svg>
+            <div class="orbit-center">
+              <div class="orbit-pct mono" id="orbit-pct">0%</div>
+              <div class="orbit-label">Today's goal</div>
+            </div>
+          </div>
+          <p class="text-center text-sm text-muted mt-2" id="goal-status" style="text-align:center;">Loading today's target…</p>
+          <div id="goal-complete" class="hidden" style="text-align:center; font-weight:700; margin-top:6px;">🎉 Daily Goal Completed</div>
+        </div>
+
+        <div class="glass card">
+          <div class="card-title">Mission Stats</div>
+          <div class="stat-row">
+            <div class="chip"><div class="chip-val mono" id="stat-remaining">0</div><div class="chip-label">Classes left</div></div>
+            <div class="chip"><div class="chip-val mono" id="stat-streak">0</div><div class="chip-label">Day streak</div></div>
+          </div>
+          <div class="stat-row mt-1">
+            <div class="chip"><div class="chip-val mono" id="stat-hours">0h</div><div class="chip-label">Hours left</div></div>
+            <div class="chip"><div class="chip-val mono" id="stat-finish">—</div><div class="chip-label">Est. finish</div></div>
+          </div>
+          <div class="card-title mt-2" style="margin-top:18px;">Quote</div>
+          <p class="text-sm" id="quote">—</p>
+        </div>
+      </div>
+
+      <div class="grid grid-2">
+        <div class="glass card">
+          <div class="card-title">Today's Classes <button class="btn btn-ghost btn-sm" id="edit-target-btn">Change target</button></div>
+          <div id="today-classes-list"></div>
+        </div>
+        <div class="glass card">
+          <div class="card-title">Revision Tracker</div>
+          <div id="revision-list"></div>
+        </div>
+      </div>
+
+      <div class="glass card">
+        <div class="card-title">Subject Progress</div>
+        <div id="subject-progress-list"></div>
+      </div>
+    </section>
+
+    <!-- ---------------- CALENDAR VIEW ---------------- -->
+    <section id="view-calendar" class="view hidden">
+      <div class="glass card">
+        <div class="cal-head">
+          <button class="icon-btn" id="cal-prev">←</button>
+          <div class="section-title" id="cal-month-label" style="margin-bottom:0;">—</div>
+          <button class="icon-btn" id="cal-next">→</button>
+        </div>
+        <div class="cal-grid" id="cal-dow-row"></div>
+        <div class="cal-grid mt-1" id="cal-grid"></div>
+        <div class="legend">
+          <div class="legend-item"><span class="legend-dot" style="background:#2DD4BF"></span>Completed</div>
+          <div class="legend-item"><span class="legend-dot" style="background:#4C5FD5"></span>Today</div>
+          <div class="legend-item"><span class="legend-dot" style="background:#E8A33D"></span>Partial</div>
+          <div class="legend-item"><span class="legend-dot" style="background:#E5647A"></span>Missed</div>
+        </div>
+      </div>
+      <div class="glass card hidden" id="day-detail-card">
+        <div class="card-title">Day Detail</div>
+        <div id="day-detail-body"></div>
+      </div>
+    </section>
+
+    <!-- ---------------- ANALYTICS VIEW ---------------- -->
+    <section id="view-analytics" class="view hidden">
+      <div class="grid grid-2">
+        <div class="glass card"><div class="card-title">Weekly Progress</div><canvas class="chart" id="chart-weekly"></canvas></div>
+        <div class="glass card"><div class="card-title">Monthly Progress</div><canvas class="chart" id="chart-monthly"></canvas></div>
+      </div>
+      <div class="grid grid-2">
+        <div class="glass card"><div class="card-title">Subject Completion</div><canvas class="chart" id="chart-subjects"></canvas></div>
+        <div class="glass card"><div class="card-title">Streak Growth</div><canvas class="chart" id="chart-streak"></canvas></div>
+      </div>
+    </section>
+
+    <!-- ---------------- ACHIEVEMENTS VIEW ---------------- -->
+    <section id="view-achievements" class="view hidden">
+      <div class="glass card">
+        <div class="card-title">Badges</div>
+        <div class="badge-grid" id="badge-grid"></div>
+      </div>
+    </section>
+
+    <!-- ---------------- SETTINGS VIEW ---------------- -->
+    <section id="view-settings" class="view hidden">
+      <div class="glass card">
+        <div class="card-title">Daily Planner</div>
+        <div class="settings-row">
+          <div><div class="settings-label">Daily class target</div><div class="settings-desc">Classes to complete per day</div></div>
+          <input type="number" min="1" max="20" class="pill" id="setting-daily-target" style="width:70px;">
+        </div>
+        <div class="settings-row">
+          <div><div class="settings-label">Default class duration</div><div class="settings-desc">Hours per class</div></div>
+          <input type="number" min="0.5" step="0.5" class="pill" id="setting-class-duration" style="width:70px;">
+        </div>
+      </div>
+
+      <div class="glass card">
+        <div class="card-title">Subjects <button class="btn btn-ghost btn-sm" id="add-subject-btn">+ Add subject</button></div>
+        <div id="subject-edit-list"></div>
+      </div>
+
+      <div class="glass card">
+        <div class="card-title">Appearance</div>
+        <div class="settings-row">
+          <div><div class="settings-label">Theme</div></div>
+          <select class="pill" id="setting-theme"><option value="dark">Dark</option><option value="light">Light</option></select>
+        </div>
+        <div class="settings-row">
+          <div><div class="settings-label">Accent colour</div></div>
+          <div class="swatches" id="accent-swatches">
+            <span class="swatch active" data-accent="#4C5FD5" style="background:#4C5FD5"></span>
+            <span class="swatch" data-accent="#2DD4BF" style="background:#2DD4BF"></span>
+            <span class="swatch" data-accent="#E8A33D" style="background:#E8A33D"></span>
+            <span class="swatch" data-accent="#E5647A" style="background:#E5647A"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="glass card">
+        <div class="card-title">Notifications</div>
+        <div class="settings-row"><div><div class="settings-label">Study reminders</div></div><div class="switch on" data-key="study"></div></div>
+        <div class="settings-row"><div><div class="settings-label">Revision reminders</div></div><div class="switch on" data-key="revision"></div></div>
+        <div class="settings-row"><div><div class="settings-label">Goal reminders</div></div><div class="switch on" data-key="goal"></div></div>
+        <div class="settings-row"><div><div class="settings-label">Streak reminders</div></div><div class="switch on" data-key="streak"></div></div>
+        <div class="settings-row"><div><div class="settings-label">Daily summary</div></div><div class="switch on" data-key="summary"></div></div>
+        <button class="btn btn-ghost btn-block mt-1" id="enable-notifs-btn">Enable browser notifications</button>
+      </div>
+
+      <div class="glass card">
+        <div class="card-title">Schedule</div>
+        <div id="schedule-edit-list"></div>
+      </div>
+
+      <div class="glass card">
+        <div class="card-title">Backup</div>
+        <button class="btn btn-ghost btn-block" id="export-btn">Export my data (JSON)</button>
+      </div>
+    </section>
+
+  </main>
+
+  <nav class="nav glass" id="main-nav">
+    <button class="nav-item active" data-view="dashboard">🏠<span>Home</span></button>
+    <button class="nav-item" data-view="calendar">📅<span>Calendar</span></button>
+    <button class="nav-item" data-view="analytics">📊<span>Stats</span></button>
+    <button class="nav-item" data-view="achievements">🏆<span>Badges</span></button>
+    <button class="nav-item" data-view="settings">⚙️<span>Settings</span></button>
+  </nav>
+</div>
+
+<div class="toast" id="toast"></div>
+<canvas id="confetti-canvas"></canvas>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
